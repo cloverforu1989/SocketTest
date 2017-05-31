@@ -1,0 +1,43 @@
+package com.itvgame.remotecontrol.main;
+
+import javax.microedition.lcdui.Canvas;
+import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.game.GameCanvas;
+
+
+
+
+public  class RemoteCanvas extends Canvas implements RemoteControlListener{
+    
+	
+
+
+
+	public void keyPressedRemote(int keyCode) {
+		keyPressed(keyCode);
+	}
+
+	
+	public void keyRleasedRemote(int keyCode) {
+		// TODO Auto-generated method stub
+		keyReleased(keyCode);
+	}
+
+
+	protected void paint(Graphics arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	
+
+
+
+
+
+
+
+
+
+}

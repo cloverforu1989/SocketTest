@@ -1,0 +1,151 @@
+package com.itvgame.remotecontrol.mina.proto;
+
+
+
+
+import java.io.UnsupportedEncodingException;
+
+import com.itvgame.remotecontrol.server.IoBuffer;
+
+/**
+ * Created by Administrator on 2016/10/11.
+ */
+
+public abstract class ProtoBase {
+//case 0:
+//	obj = new STB_Conn();
+//	break;
+//case 1:
+//	obj = new MobileConn();
+//	break;
+//case 2:
+//	obj = new ConnectResule();
+//	break;
+//case 3:
+//	obj = new RemoteControl();
+	public static final byte CLASS_STB_Conn = 0;
+	public static final byte CLASS_MobileConn = 1;
+	public static final byte CLASS_ConnectResule = 2;
+	public static final byte CLASS_RemoteControl = 3;
+	static byte cur_ver = 0;
+	IoBuffer ioBuf;
+	public byte id;
+
+	static byte ClassList[] = new byte[] { CLASS_STB_Conn, CLASS_MobileConn, CLASS_ConnectResule, CLASS_RemoteControl };
+
+	byte getClassIdx(byte id) {
+
+		for (byte idx = 0; idx < ClassList.length; idx++) {
+			if (id == ClassList[idx]) {
+				return idx;
+			}
+		}
+		return -1;
+	}
+
+	 void initBuf() {
+	 ioBuf = IoBuffer.allocate(128).setAutoExpand(true);
+	 ioBuf.put(cur_ver);
+	 System.out.println("id====================" + id);
+	 ioBuf.put(id);
+	
+	}
+
+	void putStr(String str) {
+		byte[] bytes = null;
+		try {
+			bytes = str.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ioBuf.putShort((short) bytes.length);
+		ioBuf.put(bytes);
+		// try {
+		// ioBuf.putString(str, Charset.forName("UTF-8").newEncoder());
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+	}
+
+	String getStr() {
+		short len = ioBuf.getShort();
+		byte[] bytes = new byte[len];
+		ioBuf.get(bytes);
+		try {
+			return new String(bytes, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+		// try {
+		// return ioBuf.getString(Charset.forName("UTF-8").newDecoder());
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// return null;
+	}
+
+	byte[] getBytes() {
+		int pos = ioBuf.position();
+		ioBuf.flip();
+		byte[] bytes = new byte[pos];
+		ioBuf.get(bytes);
+		ioBuf.free();
+		
+		for(int i = 0; i < bytes.length; i++) {
+			System.out.print(bytes[i]+"_");
+		}
+		return bytes;
+	}
+
+	public static Object decode(byte[] bytes) {
+		if (bytes[0] == cur_ver) {
+			byte idx = bytes[1];
+			if (idx < ClassList.length) {
+				try {
+					ProtoBase obj = null;
+					boolean decoded = true;
+					switch(idx) {
+					case CLASS_STB_Conn:
+						obj = new STB_Conn();
+						break;
+					case CLASS_MobileConn:
+						obj = new MobileConn();
+						break;
+					case CLASS_ConnectResule:
+						obj = new ConnectResule();
+						break;
+					case CLASS_RemoteControl:
+						obj = new RemoteControl();
+						break;
+					default:
+						decoded = false;
+						break;
+					}
+					if(decoded) {
+						obj.toObject(bytes);
+						return obj;
+					}else {
+						return bytes;
+					}
+						
+					
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}else if(bytes != null) {
+			return bytes;
+		}
+		return null;
+	}
+
+	public abstract byte[] toByte();
+
+	abstract void toObject(byte[] bytes);
+	
+
+}

@@ -1,0 +1,323 @@
+package com.itvgame.remotecontrol.server;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import com.itvgame.remotecontrol.main.DataTypeConversion;
+import com.itvgame.remotecontrol.mina.proto.ConnectResule;
+import com.itvgame.remotecontrol.mina.proto.ProtoBase;
+import com.itvgame.remotecontrol.mina.proto.STB_Conn;
+
+
+//存储byte 实现简单版  mina IoBuffer 接口
+public class IoBuffer {
+   private byte[] data;
+   private int position;
+   private int limit;
+   private boolean isAutoExpand=true;
+   private int minCapacity;
+   private int autoExpandNum = 3;
+   private int mark;
+   private IoBuffer(){};
+   
+   
+   public static final IoBuffer allocate(int capacity, boolean isAutoExpand) {
+	   if(capacity <= 0) throw new IllegalArgumentException("capacity can not be negative value or zero");
+	   IoBuffer ioBuffer = new IoBuffer();
+	   ioBuffer.data = new byte[capacity];
+	   ioBuffer.isAutoExpand = isAutoExpand;
+	   ioBuffer.minCapacity = capacity;
+	   ioBuffer.position = 0;
+	   ioBuffer.limit = 0;
+	   ioBuffer.mark = -1;
+	   return ioBuffer;
+   }
+   public static final IoBuffer allocate(int capacity) {
+	   if(capacity <= 0) throw new IllegalArgumentException("capacity can not be negative value or zero");
+	   IoBuffer ioBuffer = new IoBuffer();
+	   ioBuffer.data = new byte[capacity];
+	   ioBuffer.minCapacity = capacity;
+	   ioBuffer.position = 0;
+	   ioBuffer.limit = 0;
+	   ioBuffer.mark = -1;
+	   return ioBuffer;
+   }
+   
+   public static final IoBuffer allocate(byte[] b) {
+	   int capacity = b.length;
+	   if(capacity <= 0) throw new IllegalArgumentException("capacity can not be negative value or zero");
+	   IoBuffer ioBuffer = new IoBuffer();
+	   ioBuffer.data = b;
+	   ioBuffer.minCapacity = capacity;
+	   ioBuffer.position = 0;
+	   ioBuffer.limit = b.length - 1;
+	   ioBuffer.mark = 1;
+	   return ioBuffer;
+   }
+   
+   public int remaining() {
+	  return limit - position;//  position <= index < limit 
+   }
+   
+   private void expandCapacity(int newLen) {
+	   if(isAutoExpand) {
+		   byte[] newByteArr = new byte[data.length + newLen];
+		   System.arraycopy(data, 0, newByteArr, 0, data.length);
+		   data = null;
+		   data = newByteArr;
+	   }
+   }
+   
+   public void put(byte n) {
+	   
+	   synchronized (data) {
+		   if(mark == -1) {
+			   mark = 1;
+		   }
+		   if(position > limit) {//容量不够啦
+			   expandCapacity(autoExpandNum);
+		   }
+		   data[position++] = n;
+		   limit++;
+	   }
+  }
+   
+  public void put(byte[] br) {
+	  synchronized (data) {
+		  if(mark == -1) {
+			   mark = 1;
+		   }
+		   if(position + br.length > limit) {//容量不够啦
+			   expandCapacity(br.length + autoExpandNum);
+		   }
+		  
+		   System.arraycopy(br, 0, data, position, br.length);
+		   position += br.length;
+		   limit += br.length;
+	   }
+  }
+   public byte get() {
+	   if(mark == -1) {
+		   try {
+			throw new Exception("no byte can be read");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	   }
+	   if(position < limit) {
+		   byte a = data[position++];
+		   return a;
+	   }else throw new ArrayIndexOutOfBoundsException(position);
+   }
+   
+   public void get(byte[] bArr, int startIndex, int len) {
+	   if(mark == -1) {
+		   try {
+			throw new Exception("no byte can be read");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	   }
+	   synchronized (data) {
+		   System.out.println(data.length + " " + startIndex + " " + len);
+		   System.arraycopy(data, position, bArr, startIndex, len);
+		   position+=len;
+	   }
+	  
+	   
+   }
+   
+   public void get(byte[] b) {
+	   get(b,0, b.length);
+   }
+   
+   public int getInt() {
+	   int result =  DataTypeConversion.byte2Int(data, position);
+	   position+=4;
+	   
+	   return result;
+   }
+   
+   public void putInt(int n) {
+	   put(DataTypeConversion.int2Byte(n));
+   }
+   
+   public long getLong() {
+	   long result =  DataTypeConversion.byte2Long(data, position);
+	   position+=8;
+	   
+	   return result;
+   }
+   
+   public void putLong(long n) {
+	   if(n < Long.MIN_VALUE || n > Long.MAX_VALUE) throw new IllegalArgumentException("n must be between " + Long.MIN_VALUE + " and " + Long.MAX_VALUE);
+	   put(DataTypeConversion.long2Byte(n));
+   }
+   
+   public short getShort() {
+	   System.out.println(data.length + "  " + position);
+	   short result =  DataTypeConversion.byte2Short(data, position);
+	   position+=2;
+	   
+	   return result;
+   }
+   
+   public void putShort(short n) {
+	   put(DataTypeConversion.short2Byte(n));
+   }
+   public void putChar(char n) {
+	   put(DataTypeConversion.char2Byte(n));
+   }
+   public char getChar() {
+	   char result =  DataTypeConversion.byte2Char(data, position);
+	   position+=2;
+	   
+	   return result;
+   }
+   
+   public void free() {
+	   synchronized(data) {
+		   data= null;
+		   data = new byte[minCapacity];
+		   position =  0;
+		   limit = 0;
+		   mark = -1;
+	   }
+   }
+  
+   
+   public void delete(int index, int len) {
+	  synchronized (data) {
+		   byte[] bArr = new byte[data.length - len];
+		   System.arraycopy(data, 0, bArr, position, len);
+		   data = bArr;
+		   position = 0;
+		   limit-= len;
+	   }
+   }
+   public void flip() {
+	   position =  0;
+   }
+
+   public static void main(String[] args) {
+	IoBuffer buffer = IoBuffer.allocate(1, true);
+	buffer.putShort((short)123);
+	buffer.putChar('ぅ');
+	buffer.putInt(100);
+	buffer.putLong(1231263714123576654l);
+	buffer.flip();
+    System.out.println(buffer.getShort());
+	System.out.println(buffer.getChar());
+	System.out.println(buffer.getInt());
+	System.out.println(buffer.getLong());
+	
+//	STB_Conn sc = new STB_Conn("1","1","0");
+//	System.out.println(sc.toByte()[1]);
+//	Object obj  = ProtoBase.decode(sc.toByte());
+//	System.out.println((obj instanceof STB_Conn));
+	ConnectResule res = new ConnectResule(-1, "你是谁啊");
+	System.out.println("======id=====" + res.id);
+	byte[] bytes = res.toByte();
+	Object obj = ProtoBase.decode(bytes);
+	System.out.println(obj.toString());
+//	buffer.put(new byte[]{1,2,3,4,5,6,7,9});
+//	System.out.println("aaa=" + buffer.remaining());
+//	buffer.flip();
+//	byte[] b = new byte[8];
+//	buffer.get(b,0,8);
+//	System.out.println("bbb=" + buffer.remaining());
+//	//buffer.clear();
+//	System.out.println("==" + buffer.get());
+//	ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//	DataOutputStream dos = new DataOutputStream(bos);
+//	ByteArrayInputStream bais = null;
+//	DataInputStream dis = null;
+//	
+//	try {
+//		dos.write(22);
+//		bais = new ByteArrayInputStream(bos.toByteArray());
+//		dis = new DataInputStream(bais);
+//		System.out.println("=====" + dis.read());
+//	}catch (IOException e) {
+//		// TODO Auto-generated catch block
+//		e.printStackTrace();
+//	}finally {
+//		if(dis != null)
+//			try {
+//				dis.close();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		if(bais != null)
+//			try {
+//				bais.close();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		if(dos != null)
+//			try {
+//				dos.close();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		if(bos != null)
+//			try {
+//				bos.close();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+	
+	
+   }
+   
+   public int position() {
+	   return position;
+   }
+   public void skip(int n) {
+	   if(limit - position < n ) {
+		   position = limit;
+	   }else {
+		   position += n;
+	   }
+   }
+   
+   public int getAutoExpandNum() {
+		return autoExpandNum;
+   }
+   public IoBuffer setAutoExpandNum(int autoExpandNum) {
+	    this.autoExpandNum = autoExpandNum;
+		return this;
+   }
+   
+   public IoBuffer setAutoExpand(boolean autoExpand) {
+	    this.isAutoExpand = autoExpand;
+		return this;
+  }
+   
+   public IoBuffer isAutoExpand(boolean a) {
+	   this.isAutoExpand = a;
+	   return this;
+   }
+   
+   public static final IoBuffer wrap(byte[] b) {
+	   return IoBuffer.allocate(b);
+   }
+   
+   public byte[] getRemainingBytes() {
+	   if(limit - position <= 0) return null;
+	   byte[] b = new byte[limit - position];
+	   System.arraycopy(data, position + 1, b, 0, b.length);
+	   return b;
+   }
+   
+   
+}

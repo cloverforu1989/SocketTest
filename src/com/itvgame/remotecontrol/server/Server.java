@@ -1,0 +1,192 @@
+package com.itvgame.remotecontrol.server;
+
+import java.io.IOException;
+import java.util.Vector;
+import javax.microedition.io.Connector;
+import javax.microedition.io.ServerSocketConnection;
+import javax.microedition.io.SocketConnection;
+
+import com.hst.game.GameScene;
+import com.hst.game.KeyObj;
+
+public class Server {
+	public static ServerSocketConnection serverSocket = null;
+	public static Vector sessionQuenue = new Vector(); //客户端队列
+	public static boolean sign2 = true;
+	public static final int MAX_CONNECTED_NUM  = 2;
+	public static final String replaceAll(String str, String regex, String replacement) {
+		  if(str == null || regex == null || replacement==null) return str;
+		  StringBuffer sb = new StringBuffer(str);
+		  int index = -1;
+		  while((index = sb.toString().indexOf(regex)) != -1 ) {
+			  sb.delete(index, index + regex.length());
+			  sb.insert(index, replacement);
+			  
+		  }
+		  return sb.toString();
+	}
+	public static ServerHandlerInter handler = new ServerHandlerInter() {
+
+	
+		
+		public void exceptionCaught(IoSession session, Throwable cause) {
+			// TODO Auto-generated method stub
+			
+		}
+
+
+	
+		public void inputClosed(IoSession session) {
+			// TODO Auto-generated method stub
+			
+		}
+
+
+	
+		public void messageSent(IoSession session, Object message) {
+			// TODO Auto-generated method stub
+			
+		}
+
+
+	
+		public void sessionClosed(IoSession session) {
+			// TODO Auto-generated method stub
+			
+		}
+
+
+	
+		public void sessionCreated(IoSession session) {
+			// TODO Auto-generated method stub
+			
+		}
+
+
+	
+		public void sessionOpened(IoSession session) {
+			// TODO Auto-generated method stub
+			
+		}
+
+
+		
+		public void messageReceived(IoSession session, byte[] message) {
+			// TODO Auto-generated method stub
+			System.out.println("接收到信息啦。。。");
+			/*String s = replaceAll(new String(message).trim()," ","");
+			StringBuffer sb = new StringBuffer();
+			for(int i = 0; i < s.length(); i ++) {
+				sb.append((int)s.charAt(i));
+			}
+			s = replaceAll(new String(message).trim(),"\t","");
+			int i = 0;
+			if(Mtd.crParam(s)) {
+				if(s.indexOf("kd#") != -1) {
+				   String[] m = Mtd.spliteStr(s, "#");
+				   if(Mtd.isNumber(m[1])) {
+					   SceneManager.keyPressed(Integer.parseInt(m[1])); 
+				   }
+				   
+				}else if(s.indexOf("ku#") != -1) {
+					   String[] m = Mtd.spliteStr(s, "#");
+					   if(Mtd.isNumber(m[1])) {
+						   SceneManager.keyReleased(Integer.parseInt(m[1])); 
+					   }
+					   
+					}
+				
+			}*/
+			
+			KeyObj.decodeStr(new String(message), session);
+			
+			// //GameScene.addMsg("msg from client:" + new String(message));
+			
+		}
+
+		
+		
+		
+	};
+	
+	public static boolean sign = true;
+	public Server(int port){
+		 //GameScene.addMsg("socket://:"+port);
+		try {
+			serverSocket = (ServerSocketConnection)Connector.open("socket://:"+port);
+		
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			 //GameScene.addMsg(e.toString());
+		}
+	}
+	public void start(){
+		
+		new Thread() {
+			public synchronized void run() {
+				while(sign) {
+					try {
+						 //GameScene.addMsg("等待客户端连接。。。");
+						 SocketConnection sc = (SocketConnection) serverSocket.acceptAndOpen();
+						 sc.setSocketOption(SocketConnection.DELAY, 0);
+						 sc.setSocketOption(SocketConnection.LINGER, 0);
+						 sc.setSocketOption(SocketConnection.KEEPALIVE, 0);
+						 sc.setSocketOption(SocketConnection.RCVBUF, 256);
+						 sc.setSocketOption(SocketConnection.SNDBUF, 256);
+						 if(sessionQuenue.size() > MAX_CONNECTED_NUM) {
+							//GameScene.addMsg("客户端：" + sc.getAddress() + "尝试连接。。但是超过最大连接数 "+MAX_CONNECTED_NUM);
+							sc.close();
+							continue;
+						 }
+                        
+						//GameScene.addMsg("客户端：" + sc.getAddress() + " " +  sc.getLocalPort());
+						IoSession session = new IoSession(sc);
+						handler.sessionCreated(session);
+						addClient(session);//加入队列
+						session.checkMessage();
+						
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						//GameScene.addMsg("异常~" + e.getMessage()+"--" + sessionQuenue.size());
+					}
+				}
+			};
+		}.start();
+		
+		
+		
+	}
+	
+	public static final void addClient(IoSession session) {
+		synchronized(sessionQuenue) {
+			Server.sessionQuenue.addElement(session);
+		}
+		
+	}
+	public static final void removeClient(IoSession session) {
+		synchronized(sessionQuenue) {
+			Server.sessionQuenue.removeElement(session);
+		}
+		
+	}
+	public static final void stopServer() {
+		sign = false;
+		synchronized (sessionQuenue) {
+			for(int i = 0; i < sessionQuenue.size(); i++)  {
+				IoSession sc = (IoSession)sessionQuenue.elementAt(i);
+				sc.closeInOut();
+			}
+			sessionQuenue.removeAllElements();
+			try {
+				if(serverSocket != null)
+				  serverSocket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+}

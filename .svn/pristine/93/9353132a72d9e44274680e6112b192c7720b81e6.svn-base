@@ -1,0 +1,122 @@
+package com.itvgame.remotecontrol.mina.proto;
+
+import com.itvgame.remotecontrol.server.IoBuffer;
+
+
+/**
+ * Created by Administrator on 2016/10/11.
+ */
+
+public class RemoteControl extends ProtoBase {
+    public short key;
+
+    public RemoteControl(){
+    	id = CLASS_RemoteControl;
+    }
+
+    public RemoteControl(short key) {
+        this.key = key;
+    	id = CLASS_RemoteControl;
+    }
+
+    
+    public String toString() {
+        return "RemoteControl{" +
+                "key=" + key +
+                '}';
+    }
+
+    public void up(boolean on){
+        if(on)key |= 1;
+        else key &= 0xfffe;
+    }
+
+    public boolean up(){
+        return (key & 1) != 0;
+    }
+
+    public void down(boolean on){
+        if(on)key |= 2;
+        else key &= 0xfffd;
+    }
+
+    public boolean down(){
+        return (key & 2) != 0;
+    }
+
+    public void left(boolean on){
+        if(on)key |= 4;
+        else key &= 0xfffb;
+    }
+
+    public boolean left(){
+        return (key & 4) != 0;
+    }
+
+    public void right(boolean on){
+        if(on)key |= 8;
+        else key &= 0xfff7;
+    }
+
+    public boolean right(){
+        return (key & 8) != 0;
+    }
+
+    public void act0(boolean on){
+        if(on)key |= 16;
+        else key &= 0xffef;
+    }
+
+    public void act1(boolean on){
+        if(on)key |= 32;
+        else key &= 0xffdf;
+    }
+
+
+    public void act2(boolean on){
+        if(on)key |= 64;
+        else key &= 0xffbf;
+    }
+
+    public void act3(boolean on){
+        if(on)key |= 128;
+        else key &= 0xff7f;
+    }
+
+    public void act4(boolean on){
+        if(on)key |= 256;
+        else key &= 0xfeff;
+    }
+
+    public void act5(boolean on){
+        if(on)key |= 512;
+        else key &= 0xfdff;
+    }
+
+   
+    public byte[] toByte() {
+        initBuf();
+        ioBuf.putShort(key);
+        return getBytes();
+    }
+
+    
+    void toObject(byte[] bytes) {
+        ioBuf = IoBuffer.wrap(bytes);
+        ioBuf.skip(2);
+        key = ioBuf.getShort();
+    }
+    
+    public StringBuffer toBinaryStringBuffer(){
+      int a = key;
+  	  StringBuffer sb = new StringBuffer();
+  	  while(a != 0) {
+  		  int b = a % 2;
+  		  sb.append(b==0?false:true);
+  		  a /= 2;
+  		 
+  	 }
+  	  return sb.reverse();
+    }
+    
+}

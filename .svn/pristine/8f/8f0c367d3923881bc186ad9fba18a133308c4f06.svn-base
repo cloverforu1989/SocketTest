@@ -1,0 +1,51 @@
+package com.itvgame.remotecontrol.mina.proto;
+
+import com.itvgame.remotecontrol.server.IoBuffer;
+
+
+
+/**
+ * Created by Administrator on 2016/10/11.
+ */
+
+public class ConnectResule extends ProtoBase {
+    public int err_code;
+    public String msg;
+
+    public ConnectResule(){
+    	id = CLASS_ConnectResule;
+    }
+
+    public ConnectResule(int err_code, String msg) {
+        this.err_code = err_code;
+        this.msg = msg;
+        id = CLASS_ConnectResule;
+    }
+
+    
+    public String toString() {
+        return "ConnectResule{" +
+                "err_code=" + err_code +
+                ", msg='" + msg + '\'' +
+                '}';
+    }
+
+   
+    public byte[] toByte() {
+        initBuf();
+        ioBuf.putInt(err_code);
+        putStr(msg);
+        return getBytes();
+    }
+
+  
+    public void toObject(byte[] bytes) {
+        ioBuf = IoBuffer.wrap(bytes);
+        ioBuf.skip(2);
+        err_code = ioBuf.getInt();
+        msg = getStr();
+        System.out.println(err_code + "  " + msg);
+    }
+    
+   
+}

@@ -1,0 +1,10 @@
+package com.itvgame.remotecontrol.main;
+
+/**
+ * @author Clover4U
+ * 
+ */
+public interface RemoteControlListener {
+    public void keyPressed(int keyCode);
+    public void keyRleased(int keyCode);
+}

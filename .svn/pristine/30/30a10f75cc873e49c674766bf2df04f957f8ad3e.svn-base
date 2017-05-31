@@ -1,0 +1,70 @@
+package com.itvgame.remotecontrol.main;
+
+import java.io.IOException;
+
+import javax.microedition.lcdui.Canvas;
+import javax.microedition.midlet.MIDlet;
+
+import com.itvgame.remotecontrol.client.Client;
+
+/**远程控制接口类
+ * @author Clover4U
+ *
+ */
+public final class RemoteControlMain {
+	private static  MIDlet midlet;//用户id
+	private static  RemoteControlListener rcListener;
+	private static Client clent;
+	private static boolean isInit = false;
+	private static boolean deBug = false;
+	private static Canvas gameCanvas;//游戏canvas
+	private static Canvas payCanvas;//计费canvas
+	private static final String TAG = "RemoteControlMain";
+	
+	/**初始化
+	 * @param remoteControlListener 按键操作监听类
+	 * @param midlet 主midlet
+	 */
+	public static final void init(RemoteControlListener rcListener, MIDlet midlet, Canvas gameCanvas) {
+		if(!isInit && rcListener != null && midlet != null) {
+			RemoteControlMain.rcListener = rcListener;
+			RemoteControlMain.midlet = midlet;
+			RemoteControlMain.gameCanvas = gameCanvas;
+			clent = new Client(11022);
+			clent.start();
+			isInit = true;
+		}else {
+			if(isInit) log(TAG, "已经初始化过了！");
+			else if(rcListener == null) log(TAG, "rcListener不能为空");
+			else if(midlet == null) log(TAG, "midlet不能为空");
+		}
+	}
+	
+	public static final void log(String TAG, Object object) {
+		if(deBug) {
+			System.out.println(TAG + "==== " + String.valueOf(object));
+		}
+	}
+
+	public static boolean isDeBug() {
+		return deBug;
+	}
+
+	public static void setDeBug(boolean deBug) {
+		RemoteControlMain.deBug = deBug;
+	}
+	
+	/**断开连接
+	 * @throws IOException
+	 */
+	public static final void disconnect() throws IOException {
+		synchronized (clent) {
+			if(clent != null) {
+				clent.disconnect();
+			}
+		}
+		
+		
+	}
+	
+}

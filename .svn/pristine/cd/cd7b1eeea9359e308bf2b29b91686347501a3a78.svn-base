@@ -1,0 +1,60 @@
+package com.itvgame.remotecontrol.mina.proto;
+
+import com.itvgame.remotecontrol.server.IoBuffer;
+
+
+/**
+ * Created by Administrator on 2016/10/11.
+ */
+
+public class RemoteControl extends ProtoBase {
+    public byte key;
+
+    public RemoteControl(){
+    	id = CLASS_RemoteControl;
+    }
+
+    public RemoteControl(byte keyVal, boolean on){
+        key = (byte) (on? (keyVal | 0x80) : (keyVal & 0x7f));
+        id = CLASS_RemoteControl;
+    }
+
+    public byte keyVal(){
+        return (byte) (key & 0x7f);
+    }
+    
+       
+    public boolean isPress(){
+        return (key & 0x80) > 0;
+    }
+
+    public byte[] toByte() {
+        initBuf();
+        ioBuf.put(key);
+        return getBytes();
+    }
+
+    
+    void toObject(byte[] bytes) {
+        key = bytes[2];
+    }
+    
+    public StringBuffer toBinaryStringBuffer(){
+      int a = key;
+  	  StringBuffer sb = new StringBuffer();
+  	  while(a != 0) {
+  		  int b = a % 2;
+  		  sb.append(b==0?0:1);
+  		  a /= 2;
+  		 
+  	 }
+  	  return sb.reverse();
+    }
+
+	public String toString() {
+		return "RemoteControl [key=" + keyVal() + "]";
+	}
+    
+    
+    
+}

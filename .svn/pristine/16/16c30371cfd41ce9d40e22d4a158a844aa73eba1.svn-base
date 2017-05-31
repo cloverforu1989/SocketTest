@@ -1,0 +1,58 @@
+package com.itvgame.remotecontrol.mina.proto;
+
+import com.itvgame.remotecontrol.server.IoBuffer;
+
+
+/**
+ * Created by Administrator on 2016/10/11.
+ */
+
+public class MobileConn extends ProtoBase {
+    public String userId;
+    public String model;
+    public String version;
+    public int register;
+
+    public MobileConn(){
+    	id = CLASS_MobileConn;
+    }
+
+    public MobileConn(String userId, String model, String version, int register) {
+        this.userId = userId;
+        this.model = model;
+        this.version = version;
+        this.register = register;
+        id = CLASS_MobileConn;
+    }
+
+ 
+    public String toString() {
+        return "MobileConn{" +
+                "userId='" + userId + '\'' +
+                ", model='" + model + '\'' +
+                ", version='" + version + '\'' +
+                ", register=" + register +
+                '}';
+    }
+
+    
+    public byte[] toByte() {
+        initBuf();
+        putStr(userId);
+        putStr(model);
+        putStr(version);
+        ioBuf.putInt(register);
+
+        return getBytes();
+    }
+
+   
+    void toObject(byte[] bytes) {
+        ioBuf = IoBuffer.wrap(bytes);
+        ioBuf.skip(2);
+        userId = getStr();
+        model = getStr();
+        version = getStr();
+        register = ioBuf.getInt();
+    }
+}

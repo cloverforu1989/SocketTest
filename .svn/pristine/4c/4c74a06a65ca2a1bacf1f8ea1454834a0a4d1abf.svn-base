@@ -1,0 +1,50 @@
+package com.itvgame.remotecontrol.client;
+
+
+public class ClientHandler implements ClientHandlerInter{
+
+	
+	public void exceptionCaught(ClientIoSession session, Throwable cause) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	public void inputClosed(ClientIoSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	public void messageSent(ClientIoSession session, Object message) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	public void sessionClosed(ClientIoSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	public void sessionCreated(ClientIoSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	public void sessionOpened(ClientIoSession session) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	public void messageReceived(ClientIoSession session, byte[] message) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+}

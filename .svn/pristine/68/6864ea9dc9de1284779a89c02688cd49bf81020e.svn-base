@@ -1,0 +1,153 @@
+package com.itvgame.remotecontrol.client;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Vector;
+import javax.microedition.io.Connector;
+import javax.microedition.io.ServerSocketConnection;
+import javax.microedition.io.SocketConnection;
+
+import com.hst.game.GameScene;
+import com.hst.game.KeyObj;
+import com.itvgame.remotecontrol.mina.proto.ProtoBase;
+import com.sun.midp.io.j2me.serversocket.Socket;
+
+public class Client {
+	public static SocketConnection clientSocket = null;
+	public static boolean sign2 = true;
+	public static final int MAX_CONNECTED_NUM = 2;
+	String IP = "219.134.132.150";
+	
+
+	// public static final String replaceAll(String str, String regex,
+	// String replacement) {
+	// if (str == null || regex == null || replacement == null)
+	// return str;
+	// StringBuffer sb = new StringBuffer(str);
+	// int index = -1;
+	// while ((index = sb.toString().indexOf(regex)) != -1) {
+	// sb.delete(index, index + regex.length());
+	// sb.insert(index, replacement);
+	// }
+	// return sb.toString();
+	// }
+
+	public static ClientHandlerInter handler = new ClientHandlerInter() {
+
+		public void exceptionCaught(ClientIoSession session, Throwable cause) {
+			// TODO Auto-generated method stub
+           
+		}
+
+		public void inputClosed(ClientIoSession session) {
+			// TODO Auto-generated method stub
+
+		}
+
+		public void messageSent(ClientIoSession session, Object message) {
+			// TODO Auto-generated method stub
+
+		}
+
+		public void sessionClosed(ClientIoSession session) {
+			// TODO Auto-generated method stub
+
+		}
+
+		public void sessionCreated(ClientIoSession session) {
+			// TODO Auto-generated method stub
+
+		}
+
+		public void sessionOpened(ClientIoSession session) {
+			// TODO Auto-generated method stub
+
+		}
+          
+		public void messageReceived(ClientIoSession session, byte[] message) {
+			// TODO Auto-generated method stub
+			if(message != null && message.length > 0) {
+				
+					GameScene.msg.addElement("msg from server:" + ProtoBase.decode(message));
+					ProtoBase protoBase = ProtoBase.decode(message);
+			
+			}
+			
+			/*
+			 * String s = replaceAll(new String(message).trim()," ","");
+			 * StringBuffer sb = new StringBuffer(); for(int i = 0; i <
+			 * s.length(); i ++) { sb.append((int)s.charAt(i)); } s =
+			 * replaceAll(new String(message).trim(),"\t",""); int i = 0;
+			 * if(Mtd.crParam(s)) { if(s.indexOf("kd#") != -1) { String[] m =
+			 * Mtd.spliteStr(s, "#"); if(Mtd.isNumber(m[1])) {
+			 * SceneManager.keyPressed(Integer.parseInt(m[1])); }
+			 * 
+			 * }else if(s.indexOf("ku#") != -1) { String[] m = Mtd.spliteStr(s,
+			 * "#"); if(Mtd.isNumber(m[1])) {
+			 * SceneManager.keyReleased(Integer.parseInt(m[1])); }
+			 * 
+			 * }
+			 * 
+			 * }
+			 */
+
+			//KeyObj.decodeStr(new String(message), session);
+
+			// GameScene.msg.addElement("msg from client:" + new
+			// String(message));
+			//GameScene.msg.addElement("msg from server:" + ProtoBase.decode(message));
+
+		}
+
+	};
+
+	public static boolean sign = true;
+
+	public Client(int port) {
+		GameScene.msg.addElement("socket://:"+IP+ ":" + port);
+		try {
+			clientSocket = (SocketConnection) Connector.open("socket://" + IP
+					+ ":" + port);
+			clientSocket.setSocketOption(SocketConnection.LINGER, 5);
+			clientSocket.setSocketOption(SocketConnection.DELAY, 0);
+			clientSocket.setSocketOption(SocketConnection.LINGER, 0);
+			clientSocket.setSocketOption(SocketConnection.KEEPALIVE, 0);
+			clientSocket.setSocketOption(SocketConnection.RCVBUF, 256);
+			clientSocket.setSocketOption(SocketConnection.SNDBUF, 256);
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			GameScene.msg.addElement(e.toString());
+		}
+	}
+
+	public void start() {
+
+		new Thread() {
+			public synchronized void run() {
+
+				ClientIoSession session = new ClientIoSession(clientSocket);
+				handler.sessionCreated(session);
+				GameScene.msg.addElement("已经连接服务器。。。");
+                session.checkMessage();
+
+			};
+		}.start();
+
+	}
+
+	public final void disconnect() throws IOException {
+		sign = false;
+		synchronized (clientSocket) {
+
+			
+				if (clientSocket != null)
+					clientSocket.close();
+			
+		}
+
+	}
+}

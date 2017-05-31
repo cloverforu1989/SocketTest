@@ -1,0 +1,60 @@
+
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.microedition.lcdui.Display;
+import javax.microedition.lcdui.Font;
+import javax.microedition.midlet.MIDletStateChangeException;
+
+import com.clover4u.connection.OpenURL;
+import com.clover4u.startup.GameSystem;
+import com.clover4u.startup.MainMidlet;
+import com.clover4u.utils.IListener;
+import com.clover4u.utils.Mtd;
+import com.itvgame.remotecontrol.client.Client;
+import com.itvgame.remotecontrol.main.RemoteCanvas;
+import com.itvgame.remotecontrol.main.RemoteControlMain;
+import com.itvgame.remotecontrol.mina.proto.ConnectResule;
+import com.itvgame.remotecontrol.mina.proto.ProtoBase;
+import com.itvgame.remotecontrol.mina.proto.STB_Conn;
+import com.itvgame.remotecontrol.server.Server;
+
+
+public class MyMidlet extends MainMidlet {
+	
+	protected void destroyApp(boolean arg0) throws MIDletStateChangeException {
+		
+	}
+	static int counter = 0;
+	
+	protected void pauseApp() {
+		// TODO Auto-generated method stub
+    }
+    
+	public static final void login() {
+	
+		  
+    }
+	
+    protected void startApp() throws MIDletStateChangeException {
+		// TODO Auto-generated method stub
+    	//setCanvas(new RemoteCanvas());
+	   // super.startApp();
+	    //GameSystem.setHost_url(getAppProperty("server_url"));
+        //GameSystem.setRes_url(getAppProperty("resURL")+"ynwlkj/FruitMachine");
+		//GameSystem.setFont(Font.getFont(Font.FACE_SYSTEM, Font.STYLE_BOLD, Font.SIZE_SMALL));
+		//GameSystem.setFps(20);
+		//GameSystem.start();
+		//new TestScene().toScene();
+		//new Server(8989).start();
+		//new com.hst.game.GameScene().toScene();
+		//RemoteControlMain.setDebug(true);
+		//RemoteControlMain.init((RemoteCanvas)getCanvas(),this);
+		
+//		STB_Conn sc = new STB_Conn("15820467346","123123123","0");
+//		STB_Conn obj  = (STB_Conn)ProtoBase.decode(sc.toByte());
+//		System.out.println(obj.userId + " " + obj.model + " " + obj.version);
+		
+	}
+  
+}

@@ -1,0 +1,12 @@
+MIDlet-1: MyMidlet,,MyMidlet
+MIDlet-Jar-Size: 183251
+MIDlet-Jar-URL: SocketTest.jar
+MIDlet-Name: SocketTest Midlet Suite
+MIDlet-Vendor: Midlet Suite Vendor
+MIDlet-Version: 1.0.0
+MicroEdition-Configuration: CLDC-1.1
+MicroEdition-Profile: MIDP-2.0
+rcIp: 172.20.152.228
+stbType: EC1308B
+userid: zhangliang
+version: 1.0

@@ -1,0 +1,332 @@
+package com.hst.game;
+
+import java.io.IOException;
+import java.util.Vector;
+
+import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
+
+import com.clover4u.scene.Scene;
+import com.clover4u.startup.GameSystem;
+import com.clover4u.utils.Constant;
+import com.clover4u.utils.Mtd;
+import com.clover4u.view.View;
+import com.itvgame.remotecontrol.client.Client;
+import com.itvgame.remotecontrol.main.RemoteKey;
+import com.itvgame.remotecontrol.mina.proto.RemoteControl;
+import com.itvgame.remotecontrol.server.Server;
+
+
+public class GameScene extends Scene{
+    public static Vector msg = new Vector();
+    public static Vector bulletVector = new Vector();
+    public static Vector enemyVector = new Vector();
+    public static Vector keyObjVector = new Vector();
+    int eSize = enemyVector.size();
+	int bSize =  bulletVector.size();
+	int kSize = keyObjVector.size();
+    public static  Image[] img = new Image[4];
+	public static Plane plane = new Plane(200, 200, Plane.ID_PLAYER);
+	
+	
+	public void draw(Graphics g) {
+		// TODO Auto-generated method stub
+		
+		g.setColor(255, 255, 255);
+		g.fillRect(0, 0, 640, 630);
+		g.setColor(0, 0, 0);
+		
+		
+	    for(int i = 0; i < msg.size(); i++) {
+			if(msg.elementAt(i) != null)
+			g.drawString(msg.elementAt(i).toString(), 0, i * 20, View.ANCHOR_LEFT_TOP);
+		}
+		
+		plane.update();
+		plane.paint(g);
+		int bSize =  bulletVector.size();
+		for(int i = 0; i < bSize; i ++) {
+			Bullet bullet = (Bullet)bulletVector.elementAt(i);
+			if(bullet.state == 0) {
+				bulletVector.removeElement(bullet);
+				bSize --;
+				i --;
+				
+			}else {
+				bullet.paint(g);
+				bullet.nextStep(0, 0);
+			}
+		}
+		eSize = enemyVector.size();
+		for(int i = 0; i < eSize; i ++) {
+			Plane plane = (Plane)enemyVector.elementAt(i);
+			if(plane.state == 0) {
+				enemyVector.removeElementAt(i);
+				eSize --;
+				i --;
+				
+			}else {
+				plane.paint(g);
+				plane.update();
+			}
+		}
+		
+		
+		
+	}
+
+	
+	public void freeRes() {
+		// TODO Auto-generated method stub
+		Mtd.freeArray(img);
+		img = null;
+	}
+
+	
+	public void init() {
+		// TODO Auto-generated method stub
+		msg.addElement("端口开启中。。。");
+		msg.addElement(System.getProperty("microedition.hostname"));
+	    loadRes();
+	}
+
+	
+	public static void _keyPressed(int keCode) {
+		
+		// TODO Auto-generated method stub
+		switch(keCode) {
+		case RemoteKey.KEY_LEFT_DOWN:
+			 plane.dx = -10;
+			 plane.dy = 10;
+			 break;
+		case RemoteKey.KEY_LEFT_UP:
+			 plane.dx = -10;
+			 plane.dy = -10;
+			break;
+		case RemoteKey.KEY_RIGHT_UP:
+			 plane.dx = 10;
+			 plane.dy = -10;
+			break;
+		case RemoteKey.KEY_RIGHT_DOWN:
+			 plane.dx = 10;
+			 plane.dy = 10;
+			break;
+		case View.KEY_3:
+			plane.state = 3;
+			break;
+		case View.KEY_2:
+			plane.state = 2;
+			break;
+		case View.KEY_OK:
+			plane.autoFile = true;
+			break;
+		case View.KEY_1:
+			GameSystem.exitGame();
+			break;
+		case KEY_LEFT:
+			plane.dx = -10;
+			break;
+		case KEY_RIGHT:
+			plane.dx = 10; 
+			break;
+		case KEY_DOWN:
+			plane.dy = 10;
+			break;
+		case KEY_UP:
+			plane.dy = -10;
+			break;
+		case -10001://发大招
+			int m = 9;
+			int jange =  20;
+			int x = plane.x - ((img[0].getWidth() + jange)*(m - 1) ) / 2  ;
+			int y = plane.y - GameScene.img[plane.step % 2 ==0?2:3].getHeight()/ 2;
+			bulletVector.addElement(new Bullet(x , y));
+			for(int i = 1; i < m; i ++) {
+				x +=(jange + img[0].getWidth());
+				bulletVector.addElement(new Bullet(x , y));
+			}
+			break;
+		}
+	}
+
+	
+	public static void _keyReleased(int keyCode) {
+		// TODO Auto-generated method stub
+		
+		switch(keyCode) {
+		case RemoteKey.KEY_LEFT_DOWN:
+		case RemoteKey.KEY_LEFT_UP:
+		case RemoteKey.KEY_RIGHT_UP:
+		case RemoteKey.KEY_RIGHT_DOWN:
+		case KEY_LEFT:
+		case KEY_RIGHT:
+		case KEY_DOWN:
+		case KEY_UP:
+			 plane.dx = 0;
+			 plane.dy = 0;
+			break;
+		case KEY_2:
+		case KEY_3:
+			plane.state = 1;
+			break;
+		case KEY_OK:
+			plane.autoFile = false;
+			break;
+//		case KEY_LEFT:
+//			
+//			plane.dx = 0;
+//			break;
+//		case KEY_RIGHT:
+//			
+//			plane.dx = 0; 
+//			break;
+//		case KEY_DOWN:
+//			
+//			plane.dy = 0;
+//			break;
+//		case KEY_UP:
+//			
+//			plane.dy = 0;
+//			break;
+		}
+	}
+
+	
+	public void loadRes() {
+		// TODO Auto-generated method stub
+		System.out.println("===================" + isKeyLocked());
+		try {
+			img[0] = Image.createImage("/img/bullet1.png");
+			img[1] = Image.createImage("/img/enemy2.png");
+			img[2] = Image.createImage("/img/hero1.png");
+			img[3] = Image.createImage("/img/hero2.png");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		setKeyLocked(false);
+	}
+
+	
+	public void update() {
+		try {
+	
+		// TODO Auto-generated method stub
+		if(plane.step % 30 == 0) {
+			Plane plane = new Plane(Constant.r.nextInt(640), -100, Plane.ID_ENEMY);
+			plane.dy = 10;
+			enemyVector.addElement(plane);
+		}
+		
+		bSize = bulletVector.size();
+		for(int i = 0; i < eSize; i ++) {
+			Plane plane = (Plane)enemyVector.elementAt(i) ;
+			if(plane.state == 0) continue;
+			for(int j = 0; j < bSize; j ++) {
+				Bullet bullet = (Bullet)bulletVector.elementAt(j);	
+				if(bullet.state == 0) continue;
+				if(Mtd.spriteImpact(img[plane.imgIndex], plane.x - img[plane.imgIndex].getWidth() / 2,
+				   plane.y - img[plane.imgIndex].getHeight() / 2, 
+				   img[bullet.imgIndex], bullet.x - img[bullet.imgIndex].getWidth() / 2, 
+				   bullet.y - img[bullet.imgIndex].getHeight() / 2)) {
+				   
+				   bullet.state = 0;
+				   plane.state  = 0;
+				}
+			}
+		}
+		//键位事件处理
+		  
+		    	kSize = keyObjVector.size();
+				if(kSize > 0) {
+					for(int i = 0 ; i < kSize; i ++) {
+						KeyObj ko = (KeyObj)keyObjVector.elementAt(i);
+						if(ko.isPressed) {
+							_keyPressed(ko.keyCode);
+						}else {
+//							if(i < kSize - 1) {//后面还有元素
+//								KeyObj ko2 = (KeyObj)keyObjVector.elementAt(i + 1);
+//								if(ko2.isPressed &&( (ko.keyCode == View.KEY_LEFT || ko.keyCode == View.KEY_RIGHT) && (ko2.keyCode == View.KEY_LEFT || ko2.keyCode == View.KEY_RIGHT)
+//								   || (ko.keyCode == View.KEY_UP || ko.keyCode == View.KEY_DOWN) && (ko2.keyCode == View.KEY_UP || ko2.keyCode == View.KEY_DOWN)
+//								   || ko.keyCode == View.KEY_OK && ko2.keyCode == View.KEY_OK)) {
+//									System.out.println("什么都不做");
+//									_keyPressed(ko2.keyCode);
+//									keyObjVector.removeElement(ko2);
+//									kSize --;
+//								}else {
+									_keyReleased(ko.keyCode);
+//								}
+//							}else {
+//								_keyReleased(ko.keyCode);
+//							}
+							
+						}
+						keyObjVector.removeElement(ko);
+						kSize --;
+						i --;
+					}
+					
+				}
+		if(msg.size() > 25) {
+			msg.removeAllElements();
+			System.gc();
+		}
+		
+		}catch(Exception e) {
+			msg.addElement(e.getMessage());
+			
+		}
+	
+	}
+
+
+	public synchronized void keyPressed(int keyCode) {
+		// TODO Auto-generated method stub
+		//System.out.println("keyCode down = " + keyCode);
+		//keyObjVector.addElement(new KeyObj(keyCode, true, false));
+		switch(keyCode) {
+		case RemoteKey.KEY_LEFT_DOWN:
+		case RemoteKey.KEY_LEFT_UP:
+		case RemoteKey.KEY_RIGHT_UP:
+		case RemoteKey.KEY_RIGHT_DOWN:
+		case KEY_LEFT:
+		case KEY_RIGHT:
+		case KEY_DOWN:
+		case KEY_UP:
+			plane.dx = 0;
+			plane.dy = 0;
+			_keyPressed(keyCode);
+			break;
+		default:
+			keyObjVector.addElement(new KeyObj(keyCode, true, false));
+			break;
+		}
+		
+	}
+    
+    
+	public synchronized void keyReleased(int keyCode) {
+		// TODO Auto-generated method stub
+		//System.out.println("keyCode up= " + keyCode);
+		//keyObjVector.addElement(new KeyObj(keyCode, false, true));
+		switch(keyCode) {
+		case RemoteKey.KEY_LEFT_DOWN:
+		case RemoteKey.KEY_LEFT_UP:
+		case RemoteKey.KEY_RIGHT_UP:
+		case RemoteKey.KEY_RIGHT_DOWN:
+		case KEY_LEFT:
+		case KEY_RIGHT:
+		case KEY_DOWN:
+		case KEY_UP:
+			_keyReleased(keyCode);
+			break;
+		default:
+			keyObjVector.addElement(new KeyObj(keyCode, false, true));
+			break;
+		}
+		
+	}
+
+}

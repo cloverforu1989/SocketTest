@@ -1,0 +1,106 @@
+package com.hst.game;
+
+import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
+
+import com.clover4u.utils.Mtd;
+import com.clover4u.utils.MyObject;
+import com.clover4u.view.View;
+
+public class Plane extends MyObject {
+	public int x;
+	public int y;
+	public int id;
+	public int dx;
+	public int dy;
+	public int step;
+	public double m = 1;
+	public int state = 1;
+	int angel = 0;
+	public boolean autoFile = false;
+	public static final int ID_PLAYER = 1;
+	public static final int ID_ENEMY = 0;
+	public Image rotateImage = null;
+	public int imgIndex = -1;
+    public Plane(int x, int y, int id) {
+    	this.x = x;
+    	this.y = y;
+    	this.id = id;
+    	if(id == ID_PLAYER) {
+    		imgIndex = 2;
+    	}else if(id == ID_ENEMY) {
+    		imgIndex = 1;
+    	}
+    }
+	public void paint(Graphics g) {
+		// TODO Auto-generated method stub
+		//g.drawRect(x - GameScene.img[2].getWidth()/2, y - GameScene.img[2].getHeight() / 2, GameScene.img[2].getWidth(), GameScene.img[2].getHeight());
+		if(id == ID_PLAYER) {
+			if(rotateImage != null) {
+				Mtd.drawImage(rotateImage, x, y,  View.ANCHOR_HCENTER_VCENTER , g);
+			}
+			else {
+				Mtd.drawImage(GameScene.img[step % 2 ==0?2:3], x, y,  View.ANCHOR_HCENTER_VCENTER , g);
+			}
+			
+			
+		}else Mtd.drawImage(GameScene.img[1], x, y,   View.ANCHOR_HCENTER_VCENTER , g);
+	}
+
+	public void update() {
+		// TODO Auto-generated method stub
+		step ++;
+		x += dx;
+		y += dy;
+		if(x < 0) {
+			x = 0;
+			
+		}else if(x > 640) {
+			x = 640;
+		}
+		
+		if(y < 0) {
+			y = 0;
+		}else if(y > 530) {
+			y = 530;
+			if(id == ID_ENEMY) {
+				state = 0;
+			}
+		}
+		
+		if(state == 2){//旋转
+			if(step % 4 == 0) {
+				angel += 45;
+				if(angel > 360) angel = 45;
+				  
+				try {
+				   rotateImage = TestScene.rotate(GameScene.img[2], GameScene.img[2].getWidth() / 2, GameScene.img[2].getHeight() / 2, angel);
+				}catch(Exception e) {
+				   GameScene.msg.addElement("出现异常 = " + e);
+				}
+				 
+			}
+		}else if(state == 3) {
+			if(step % 100 < 50) {
+				if(step % 4 == 0) {
+					m += 0.1;
+				}
+			}else {
+				if(step % 4 == 0) {
+					m -= 0.5;
+					if( m < 0) {
+						m = 0.1;
+					}
+				}
+			}
+			rotateImage = TestScene.zoomImage(GameScene.img[2], (int)(GameScene.img[2].getWidth() * m) , (int)(GameScene.img[2].getHeight() * m));
+		}
+		if(autoFile && step % 2== 0) {
+			shoot(x, y - GameScene.img[step % 2 ==0?2:3].getHeight()/ 2);
+		}
+	}
+    
+	public void shoot(int x, int y) {
+		GameScene.bulletVector.addElement(new Bullet(x , y));
+	}
+}
